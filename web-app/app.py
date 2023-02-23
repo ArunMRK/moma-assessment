@@ -55,37 +55,47 @@ df = df[df['title'].str.contains('Untitled')==False ]
 
 px.defaults.template = "ggplot2"
 
-
+df_filtered = df.dropna(axis=0)
 decades = ['2000s', '2010s', '2020s']
 decade_bins = [2000,2010,2020,2030]
-df['decade'] = pd.cut(df['year_completed'], labels=decades, bins=decade_bins)
-df['here'] = 1 #Allows summing up of columns
-fig1=px.bar(df,x='nationality',y='here',title='Artist nationality',labels={'nationality': 'Artist nationality',
+df['decade'] = pd.cut(df_filtered['year_completed'], labels=decades, bins=decade_bins)
+
+df_filtered = df.dropna(axis=0)
+df_filtered['here'] = 1 #Allows summing up of columns
+fig1=px.bar(df_filtered,x='nationality',y='here',title='Artist nationality',labels={'nationality': 'Artist nationality',
     'here': 'No. of pieces'},color='nationality')
-fig2=px.pie(values=df['here'],names=df['gender'],title='Artist gender')
-fig3=px.pie(values=df['here'],names=df['decade'],title='Decade works completed')
-fig4=px.pie(values=df['here'],names=df['department'],title='Department work is from')
+fig2=px.pie(values=df_filtered['here'],names=df_filtered['gender'],title='Artist gender')
+fig3=px.pie(values=df_filtered['here'],names=df_filtered['decade'],title='Decade works completed')
+fig4=px.pie(values=df_filtered['here'],names=df_filtered['department'],title='Department work is from')
 
 
 
 app = Dash(__name__)
 app.layout = dbc.Container([
     dbc.Row([
-    dbc.Col(html.H1(children='Museum of Modern Art')),
+        dbc.Col(html.H1(children='Museum of Modern Art')),
     ]),
     html.Div([
-    html.H4(children= f'There are {df.shape[0]} paintings in the collection in total.')
+        html.H4(children= f'There are {df.shape[0]} pieces in the collection in total.')
     ]),
     html.Div([
-    html.H3(children='Artists')
+        html.H3(children='Artists')
     ]),
-    dbc.Col([
-    dcc.Dropdown(list(df['nationality'].unique()), 'American', id='country-dropdown'),
-    html.Div(id='country-output-container')
-    ]),
-    dbc.Col([
-    dcc.Dropdown(['Male','Female','Other/Unknown'], 'Male', id='gender-dropdown'),
-    html.Div(id='gender-output-container')
+    html.Div(children = [
+        html.Div([
+            html.H5(children='Countries of origin')
+        ]),
+        html.Div([
+            dcc.Dropdown(list(df['nationality'].unique()), 'American', id='country-dropdown'),
+            html.Div(id='country-output-container')
+        ]),
+        html.Div([
+            html.H5(children='Gender')
+        ]),
+        html.Div([
+            dcc.Dropdown(['Male','Female','Other/Unknown'], 'Male', id='gender-dropdown'),
+            html.Div(id='gender-output-container')
+        ])
     ]),
     html.Div(children=[
     html.Div(
@@ -100,37 +110,37 @@ app.layout = dbc.Container([
         ), style={'display': 'inline-block'})
     ], style={'width': '100%', 'display': 'inline-block'}),
     html.Div([
-    html.H3(children='Artworks')
+        html.H3(children='Artworks')
     ]),
     html.Div(children=[
-    html.Div([
-    html.H5(children='Year')
-    ]),
-    html.Div([
-    dcc.Dropdown(['This year','Last 5 years','2020s','2010s','2000s'], '2020s', id='decade-dropdown'),
-    html.Div(id='decade-output-container')
-    ]),
-    html.Div([
-    html.H5(children='Department')
-    ]),
-    html.Div([
-    dcc.Dropdown(['Drawings & Prints', 'Photography', 'Painting & Sculpture',
- 'Media and Performance', 'Architecture & Design'], 'Drawings & Prints', id='dept-dropdown'),
-    html.Div(id='dept-output-container')
-    ]),
+        html.Div([
+            html.H5(children='Year')
+        ]),
+        html.Div([
+            dcc.Dropdown(['This year','Last 5 years','2020s','2010s','2000s'], '2020s', id='decade-dropdown'),
+            html.Div(id='decade-output-container')
+        ]),
+        html.Div([
+            html.H5(children='Department')
+        ]),
+        html.Div([
+            dcc.Dropdown(['Drawings & Prints', 'Photography', 'Painting & Sculpture',
+            'Media and Performance', 'Architecture & Design'], 'Drawings & Prints', id='dept-dropdown'),
+            html.Div(id='dept-output-container')
+        ]),
     ]),
     html.Div(children=[
-    html.Div(
-        dcc.Graph(
-            id='decade-graph',
-           figure=fig2
-        ), style={'display': 'inline-block'}),
-    html.Div(
-        dcc.Graph(
-            id='dept-graph',
-            figure=fig4
-        ), style={'display': 'inline-block'})
-    ], style={'width': '100%', 'display': 'inline-block'}),
+        html.Div(
+            dcc.Graph(
+                id='decade-graph',
+                figure=fig3
+            ), style={'display': 'inline-block'}),
+        html.Div(
+            dcc.Graph(
+                id='dept-graph',
+                figure=fig4
+            ), style={'display': 'inline-block'})
+        ], style={'width': '100%', 'display': 'inline-block'}),
 ])
     
 
@@ -149,10 +159,10 @@ def update_output(value):
 def update_output(value):
     gender_count=len(df[df['gender'] == value ])
     if value is not None:
-        return f'There are {gender_count} paintings in the collection from {value.lower()} artists'
+        return f'There are {gender_count} pieces in the collection from {value.lower()} artists'
     else:
         nullgender = df['gender'].isna().sum().sum()
-        return f'There are {nullgender} paintings in the collection from artists of unknown or non-binary gender'
+        return f'There are {nullgender} pieces in the collection from artists of unknown or non-binary gender'
 
 @app.callback(
     Output('decade-output-container', 'children'),
@@ -163,13 +173,13 @@ def update_output(value):
     current_year = today.strftime("%Y")
     if value == 'This year':
         art_this_year = len(df[df['year_completed'] == (int(current_year)) ])
-        return f'There are {art_this_year} paintings in the collection'
+        return f'There are {art_this_year} pieces in the collection from this year'
     if value == 'Last 5 years':
         art_last_five_years = len(df[df['year_completed'] >= (int(current_year)-5) ])
-        return f'There are {art_last_five_years} paintings in the collection from the last five years'
+        return f'There are {art_last_five_years} pieces in the collection from the last five years'
     else:
         decade_count=len(df[df['decade'] == value ])
-        return f'There are {decade_count} paintings in the collection from the {value}'
+        return f'There are {decade_count} pieces in the collection from the {value}'
 
 @app.callback(
     Output('dept-output-container', 'children'),
@@ -177,7 +187,7 @@ def update_output(value):
 )
 def update_output(value):
     dept_count=len(df[df['department'] == value ])
-    return f'There are {dept_count} paintings in the collection from the {value} department'
+    return f'There are {dept_count} pieces in the collection from the {value} department'
 
 if __name__ == '__main__':
     app.run_server(debug=True)
