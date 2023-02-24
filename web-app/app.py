@@ -97,7 +97,7 @@ app.layout = dbc.Container([
         dcc.Graph(
             id='country-graph',
            figure=fig1
-        ), style={'display': 'inline-block'}),
+        ), style={'display': 'inline-block'}), 
         
     ]),
     html.Div(children=[
@@ -105,7 +105,7 @@ app.layout = dbc.Container([
             html.H5(children='Gender')
         ]),
         html.Div([
-            dcc.Dropdown(['Male','Female','Other/Unknown'], 'Male', id='gender-dropdown'),
+            dcc.Dropdown(['Male','Female','Other/Unknown'], 'Male', id='gender-dropdown'), 
             html.Div(id='gender-output-container')
         ]),
         html.Div(
@@ -148,14 +148,14 @@ app.layout = dbc.Container([
         ], style={'width': '50%', 'display': 'inline-block'}),
 ])
     
-
+"""Callback functions to update graphs"""
 @app.callback(
     Output('country-output-container', 'children'),
     Input('country-dropdown', 'value')
 )
 def update_output(value)-> str:
     country_count=len(df[df['nationality'] == value ])
-    return f'There are {country_count} paintings in the collection from {value} artists'
+    return f'There are {country_count} pieces in the collection from {value} artists'
 
 @app.callback(
     Output('gender-output-container', 'children'),
@@ -166,8 +166,10 @@ def update_output(value)-> str:
     if value is not None:
         return f'There are {gender_count} pieces in the collection from {value.lower()} artists'
     else:
+        """Without this special case, the user is presented a dropdown option for gender = null, 
+        which then crashes the page if they select it since you can't put a null value in lowercase"""
         nullgender = df['gender'].isna().sum().sum()
-        return f'There are {nullgender} pieces in the collection from artists of unknown or non-binary gender'
+        return f'There are {nullgender} pieces in the collection from artists of unknown or non-binary gender' 
 
 @app.callback(
     Output('decade-output-container', 'children'),
